@@ -1,0 +1,23 @@
+sudo: required
+
+services:
+    - docker
+
+before_install:
+    - docker build -t alxbenz/react-test -f ./client/Dockerfile.dev ./client
+    
+script: 
+    - docker run -e CI=true alxbenz/react-test npm test
+
+after_success:
+    - docker build -t alxbenz/multi-client ./client
+    - docker build -t alxbenz/multi-nginx ./nginx
+    - docker build -t alxbenz/multi-server ./server
+    - docker build -t alxbenz/multi-worker ./worker
+    # log in to docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # take the images and push them to docker hub
+    - docker push alxbenz/multi-client
+    - docker push alxbenz/multi-nginx
+    - docker push alxbenz/multi-server
+    - docker push alxbenz/multi-worker
